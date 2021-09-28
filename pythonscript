@@ -1,0 +1,280 @@
+# True-LST.py
+# ---------------------------------------------------------------------------
+
+# Import arcpy module
+import arcpy
+
+# Load required toolboxes
+arcpy.ImportToolbox("Model Functions")
+
+# Script arguments
+LR_blue = arcpy.GetParameterAsText(0)
+if LR_blue == '#' or not LR_blue:
+    LR_blue = "C:\\Users\\PC\\Desktop\\data\\Boston GEE\\LR_RGB\\LR_Blue.tif" # provide a default value if unspecified
+
+LR_green = arcpy.GetParameterAsText(1)
+if LR_green == '#' or not LR_green:
+    LR_green = "C:\\Users\\PC\\Desktop\\data\\Boston GEE\\LR_RGB\\LR_Green.tif" # provide a default value if unspecified
+
+LR_red = arcpy.GetParameterAsText(2)
+if LR_red == '#' or not LR_red:
+    LR_red = "C:\\Users\\PC\\Desktop\\data\\Boston GEE\\LR_RGB\\LR_Red.tif" # provide a default value if unspecified
+
+HR = arcpy.GetParameterAsText(3)
+if HR == '#' or not HR:
+    HR = "C:\\Users\\PC\\Desktop\\data\\Boston GEE\\HR\\HR_1.tif" # provide a default value if unspecified
+
+Outputs = arcpy.GetParameterAsText(4)
+if Outputs == '#' or not Outputs:
+    Outputs = "C:\\Users\\PC\\Desktop\\data\\cali_vali\\Boston\\n" # provide a default value if unspecified
+
+LR_LST = arcpy.GetParameterAsText(5)
+if LR_LST == '#' or not LR_LST:
+    LR_LST = "C:\\Users\\PC\\Desktop\\data\\cali_vali\\Boston\\LSThotmean_1.tif" # provide a default value if unspecified
+
+LST_HR_tif = arcpy.GetParameterAsText(6)
+if LST_HR_tif == '#' or not LST_HR_tif:
+    LST_HR_tif = "%Outputs%\\LST_HR.tif" # provide a default value if unspecified
+
+# Local variables:
+Blue = "%Outputs%\\Blue.tif"
+Aggrega_tif14_tif = "%Outputs%\\Aggrega_tif14.tif"
+nblue = "%Outputs%\\nblue"
+calibration_shp = "%Outputs%\\calibration.shp"
+calibration = calibration_shp
+calibration_new = calibration_shp
+calibration_new__2_ = calibration_shp
+calibration_new__3_ = calibration_shp
+Green_tif = "%Outputs%\\Green.tif"
+Extract_RES_2 = "%Outputs%\\Extract_RES_2"
+Red_tif = "%Outputs%\\Red.tif"
+Extract_RES_3 = "%Outputs%\\Extract_RES_3"
+calibration_Select_shp = "%Outputs%\\calibration_Select.shp"
+calibration_Select_shp__2_ = calibration_Select_shp
+calibration_Select_shp__4_ = calibration_Select_shp__2_
+cali_OLS_shp = "%Outputs%\\cali_OLS.shp"
+diag_dbf = "%Outputs%/diag.dbf"
+report_pdf = "%Outputs%/report.pdf"
+HR_red_1 = "HR_red"
+Aggrega_RHR_tif = "%Outputs%\\Aggrega_RHR.tif"
+calibration_SelectR_shp = "%Outputs%\\calibration_SelectR.shp"
+calibration_SelectRGB = calibration_SelectR_shp
+calibration_Select_shpR = calibration_SelectRGB
+coefR_dbf = "%Outputs%\\coefR.dbf"
+InterceptR = coefR_dbf
+coef_RedR = "%Outputs%\\coef_RedR"
+Redcoef = coef_RedR
+new_R_tif = "%Outputs%\\new_R.tif"
+coef_dbf = "%Outputs%\\coef.dbf"
+Intercept_Value = coef_dbf
+coef_Red = "%Outputs%\\coef_Red"
+Red_Value = coef_Red
+HR_green_1 = "HR_green"
+Aggrega_GHR_tif = "%Outputs%\\Aggrega_GHR.tif"
+calibration_SelectG_shp = "%Outputs%\\calibration_SelectG.shp"
+calibration_SelectRGB__3_ = calibration_SelectG_shp
+calibration_Select_shpR__3_ = calibration_SelectRGB__3_
+coefG_dbf = "%Outputs%\\coefG.dbf"
+InterceptG = coefG_dbf
+coef_GreenG = "%Outputs%\\coef_GreenG"
+Greencoef = coef_GreenG
+new_G_tif = "%Outputs%\\new_G.tif"
+coef_Green = "%Outputs%\\coef_Green"
+Green_Value = coef_Green
+HR_blue_1 = "HR_blue"
+Aggrega_BHR_tif = "%Outputs%\\Aggrega_BHR.tif"
+calibration_SelectB_shp = "%Outputs%\\calibration_SelectB.shp"
+calibration_SelectRGB__2_ = calibration_SelectB_shp
+calibration_Select_shpR__2_ = calibration_SelectRGB__2_
+coefB_dbf = "%Outputs%\\coefB.dbf"
+InterceptB = coefB_dbf
+coef_BlueB = "%Outputs%\\coef_BlueB"
+Bluecoef = coef_BlueB
+new_B_tif = "%Outputs%\\new_B.tif"
+coef_Blue = "%Outputs%\\coef_Blue"
+Blue_Value = coef_Blue
+coef_Agg = "%Outputs%\\coef_Agg"
+Aggregate_Value = coef_Agg
+cali_OLSR_shp = "%Outputs%\\cali_OLSR.shp"
+diagR_dbf = "%Outputs%/diagR.dbf"
+reportR_pdf = "%Outputs%/reportR.pdf"
+cali_OLSB_shp = "%Outputs%\\cali_OLSB.shp"
+diagB_dbf = "%Outputs%/diagB.dbf"
+reportB_pdf = "%Outputs%/reportB.pdf"
+cali_OLSG_shp = "%Outputs%\\cali_OLSG.shp"
+diagG_dbf = "%Outputs%/diagG.dbf"
+reportG_pdf = "%Outputs%/reportG.pdf"
+
+# Set Geoprocessing environments
+arcpy.env.snapRaster = LR_red
+arcpy.env.extent = "DEFAULT"
+arcpy.env.cellSize = "MINOF"
+arcpy.env.mask = ""
+
+# Process: Copy Raster
+arcpy.CopyRaster_management(LR_blue, Blue, "", "", "-1.797693e+308", "NONE", "NONE", "8_BIT_UNSIGNED", "NONE", "NONE", "TIFF", "NONE")
+
+# Process: Aggregate
+arcpy.gp.Aggregate_sa(LR_LST, Aggrega_tif14_tif, "30", "MEAN", "EXPAND", "DATA")
+
+# Process: Extract by Mask
+arcpy.gp.ExtractByMask_sa(Blue, Aggrega_tif14_tif, nblue)
+
+# Process: Create Accuracy Assessment Points
+arcpy.gp.CreateAccuracyAssessmentPoints_sa(nblue, calibration_shp, "CLASSIFIED", "1000", "RANDOM")
+
+# Process: Copy Raster (2)
+arcpy.CopyRaster_management(LR_green, Green_tif, "", "", "-1.797693e+308", "NONE", "NONE", "8_BIT_UNSIGNED", "NONE", "NONE", "TIFF", "NONE")
+
+# Process: Extract by Mask (2)
+arcpy.gp.ExtractByMask_sa(Green_tif, Aggrega_tif14_tif, Extract_RES_2)
+
+# Process: Copy Raster (3)
+arcpy.CopyRaster_management(LR_red, Red_tif, "", "", "-1.797693e+308", "NONE", "NONE", "8_BIT_UNSIGNED", "NONE", "NONE", "TIFF", "NONE")
+
+# Process: Extract by Mask (3)
+arcpy.gp.ExtractByMask_sa(Red_tif, Aggrega_tif14_tif, Extract_RES_3)
+
+# Process: Extract Multi Values to Points
+arcpy.gp.ExtractMultiValuesToPoints_sa(calibration_shp, "%Outputs%\\Aggrega_tif14.tif Agg;C:\\Users\\PC\\Desktop\\yaser\\manuscript_3\\data\\cali_vali\\Boston\\LSThotmean_1.tif BR_LST;%Outputs%\\nblue Blue;%Outputs%\\Extract_RES_2 Green;%Outputs%\\Extract_RES_3 Red", "NONE")
+
+# Process: Select
+arcpy.Select_analysis(calibration, calibration_Select_shp, "\"BR_LST\" <>-9999")
+
+# Process: Add Field
+arcpy.AddField_management(calibration_Select_shp, "IDD", "LONG", "", "", "", "", "NULLABLE", "NON_REQUIRED", "")
+
+# Process: Calculate Field
+arcpy.CalculateField_management(calibration_Select_shp__2_, "IDD", "[FID]", "VB", "")
+
+# Process: Ordinary Least Squares
+arcpy.OrdinaryLeastSquares_stats(calibration_Select_shp__4_, "IDD", cali_OLS_shp, "BR_LST", "Agg;Blue;Green;Red", coef_dbf, diag_dbf, report_pdf)
+
+# Process: Make Raster Layer
+arcpy.MakeRasterLayer_management(HR, HR_red_1, "", "-71.0458064768464 42.4056197738666 -70.9804809893852 42.4315451529663", "1")
+
+# Process: Aggregate (2)
+arcpy.gp.Aggregate_sa(HR_red_1, Aggrega_RHR_tif, "30", "MEAN", "EXPAND", "DATA")
+
+# Process: Extract Multi Values to Points (2)
+arcpy.gp.ExtractMultiValuesToPoints_sa(calibration_shp, "%Outputs%\\Aggrega_RHR.tif RHR", "NONE")
+
+# Process: SelectR
+arcpy.Select_analysis(calibration_new, calibration_SelectR_shp, "\"RHR\" <>-9999 AND \"RHR\" <>0 AND \"Red\" <>-9999 AND \"Red\" <>0")
+
+# Process: Add FieldR
+arcpy.AddField_management(calibration_SelectR_shp, "IDD", "LONG", "", "", "", "", "NULLABLE", "NON_REQUIRED", "")
+
+# Process: Calculate FieldR
+arcpy.CalculateField_management(calibration_SelectRGB, "IDD", "[FID]", "VB", "")
+
+# Process: Ordinary Least Squares (2)
+arcpy.OrdinaryLeastSquares_stats(calibration_Select_shpR, "IDD", cali_OLSR_shp, "Red", "RHR", coefR_dbf, diagR_dbf, reportR_pdf)
+
+# Process: Table Select (5)
+arcpy.TableSelect_analysis(coefR_dbf, coef_RedR, "\"OID\" =1")
+
+# Process: Get Field Value (7)
+arcpy.GetFieldValue_mb(coef_RedR, "Coef", "String", "0")
+
+# Process: Get Field Value (6)
+arcpy.GetFieldValue_mb(coefR_dbf, "Coef", "String", "0")
+
+# Process: Raster Calculator (3)
+arcpy.gp.RasterCalculator_sa("(\"%HR_red_1%\" * %Redcoef%) + %InterceptR%", new_R_tif)
+
+# Process: Table Select (4)
+arcpy.TableSelect_analysis(coef_dbf, coef_Red, "\"OID\" =4")
+
+# Process: Get Field Value (5)
+arcpy.GetFieldValue_mb(coef_Red, "Coef", "String", "0")
+
+# Process: Make Raster Layer (3)
+arcpy.MakeRasterLayer_management(HR, HR_green_1, "", "-71.0458064768464 42.4056197738666 -70.9804809893852 42.4315451529663", "2")
+
+# Process: Aggregate (4)
+arcpy.gp.Aggregate_sa(HR_green_1, Aggrega_GHR_tif, "30", "MEAN", "EXPAND", "DATA")
+
+# Process: Extract Multi Values to Points (4)
+arcpy.gp.ExtractMultiValuesToPoints_sa(calibration_shp, "%Outputs%\\Aggrega_GHR.tif GHR", "NONE")
+
+# Process: SelectRGB (3)
+arcpy.Select_analysis(calibration_new__3_, calibration_SelectG_shp, "\"RHR\" <>-9999 AND \"RHR\" <>0 AND \"Red\" <>-9999 AND \"Red\" <>0")
+
+# Process: Add FieldR (3)
+arcpy.AddField_management(calibration_SelectG_shp, "IDD", "LONG", "", "", "", "", "NULLABLE", "NON_REQUIRED", "")
+
+# Process: Calculate FieldR (3)
+arcpy.CalculateField_management(calibration_SelectRGB__3_, "IDD", "[FID]", "VB", "")
+
+# Process: Ordinary Least Squares (4)
+arcpy.OrdinaryLeastSquares_stats(calibration_Select_shpR__3_, "IDD", cali_OLSG_shp, "Green", "GHR", coefG_dbf, diagG_dbf, reportG_pdf)
+
+# Process: Table Select (7)
+arcpy.TableSelect_analysis(coefG_dbf, coef_GreenG, "\"OID\" =1")
+
+# Process: Get Field Value (11)
+arcpy.GetFieldValue_mb(coef_GreenG, "Coef", "String", "0")
+
+# Process: Get Field Value (10)
+arcpy.GetFieldValue_mb(coefG_dbf, "Coef", "String", "0")
+
+# Process: Raster Calculator (4)
+arcpy.gp.RasterCalculator_sa("(\"%HR_green_1%\" * %Greencoef%) + %InterceptG%", new_G_tif)
+
+# Process: Table Select (3)
+arcpy.TableSelect_analysis(coef_dbf, coef_Green, "\"OID\" =3")
+
+# Process: Get Field Value (4)
+arcpy.GetFieldValue_mb(coef_Green, "Coef", "String", "0")
+
+# Process: Make Raster Layer (2)
+arcpy.MakeRasterLayer_management(HR, HR_blue_1, "", "-71.0458064768464 42.4056197738666 -70.9804809893852 42.4315451529663", "3")
+
+# Process: Aggregate (3)
+arcpy.gp.Aggregate_sa(HR_blue_1, Aggrega_BHR_tif, "30", "MEAN", "EXPAND", "DATA")
+
+# Process: Extract Multi Values to Points (3)
+arcpy.gp.ExtractMultiValuesToPoints_sa(calibration_shp, "%Outputs%\\Aggrega_BHR.tif BHR", "NONE")
+
+# Process: SelectB
+arcpy.Select_analysis(calibration_new__2_, calibration_SelectB_shp, "\"BHR\" <>-9999 AND \"BHR\" <>0 AND \"Blue\" <>-9999 AND \"Blue\" <>0")
+
+# Process: Add FieldB
+arcpy.AddField_management(calibration_SelectB_shp, "IDD", "LONG", "", "", "", "", "NULLABLE", "NON_REQUIRED", "")
+
+# Process: Calculate FieldR (2)
+arcpy.CalculateField_management(calibration_SelectRGB__2_, "IDD", "[FID]", "VB", "")
+
+# Process: Ordinary Least Squares (3)
+arcpy.OrdinaryLeastSquares_stats(calibration_Select_shpR__2_, "IDD", cali_OLSB_shp, "Blue", "BHR", coefB_dbf, diagB_dbf, reportB_pdf)
+
+# Process: Table Select (6)
+arcpy.TableSelect_analysis(coefB_dbf, coef_BlueB, "\"OID\" =1")
+
+# Process: Get Field Value (9)
+arcpy.GetFieldValue_mb(coef_BlueB, "Coef", "String", "0")
+
+# Process: Get Field Value (8)
+arcpy.GetFieldValue_mb(coefB_dbf, "Coef", "String", "0")
+
+# Process: Raster Calculator (2)
+arcpy.gp.RasterCalculator_sa("(\"%HR_blue_1%\" * %Bluecoef%) + %InterceptB%", new_B_tif)
+
+# Process: Table Select (2)
+arcpy.TableSelect_analysis(coef_dbf, coef_Blue, "\"OID\" =2")
+
+# Process: Get Field Value (3)
+arcpy.GetFieldValue_mb(coef_Blue, "Coef", "String", "0")
+
+# Process: Table Select
+arcpy.TableSelect_analysis(coef_dbf, coef_Agg, "\"OID\" =1")
+
+# Process: Get Field Value (2)
+arcpy.GetFieldValue_mb(coef_Agg, "Coef", "String", "0")
+
+# Process: Get Field Value
+arcpy.GetFieldValue_mb(coef_dbf, "Coef", "String", "0")
+
+# Process: Raster Calculator
+arcpy.gp.RasterCalculator_sa("(\"%new_R.tif%\"*%Red Value%) + (\"%new_G.tif%\"*%Green Value%) + (\"%new_B.tif%\"*%Blue Value%) + (\"%LR_LST%\"*%Aggregate Value%) + %Intercept Value%", LST_HR_tif)
